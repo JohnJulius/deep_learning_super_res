@@ -1,0 +1,59 @@
+The given `docker run` command creates a new Docker container with the PyTorch environment. However, it does not create a container image that can be reused later. To create a container image, you can use the `docker build` command.
+
+To create a Docker container image from the given `docker run` command, you can follow these steps:
+
+1. Create a new directory for the Dockerfile.
+2. Create a file called `Dockerfile` in the directory and add the following code:
+
+```dockerfile
+FROM rocm/pytorch:latest
+
+# Set the Dockerfile to use the `latest` tag of the `rocm/pytorch` image. This will ensure that the image is always up-to-date with the latest version of PyTorch.
+
+# Add the `--cap-add=SYS_PTRACE`, `--security-opt seccomp=unconfined`, `--device=/dev/kfd`, `--device=/dev/dri`, `--group-add video`, `--ipc=host`, and `--shm-size 8G` options to the Dockerfile. These options are necessary for the container to access the hardware and software necessary for ROCm.
+ENV DOCKER_RUN_OPTIONS "--cap-add=SYS_PTRACE --security-opt seccomp=unconfined --device=/dev/kfd --device=/dev/dri --group-add video --ipc=host --shm-size 8G"
+
+# Start the container with the PyTorch environment and the specified options.
+CMD ["docker", "run", "-it", "$DOCKER_RUN_OPTIONS", "rocm/pytorch:latest"]
+```
+
+3. Save the `Dockerfile`.
+4. Build the Docker container image using the following command:
+
+```
+docker build -t pytorch-rocm:latest .
+```
+
+This will build a Docker container image called `pytorch-rocm:latest`.
+
+Once the Docker container image has been built, you can start a Docker container from it using the following command:
+
+```
+docker run -it pytorch-rocm:latest
+```
+
+This will start a Docker container with the PyTorch environment and the specified options.
+
+You can now run PyTorch code in the Docker container. You can also install additional dependencies, such as Python packages or ROCm libraries, by using the `apt` and `pip` commands.
+
+To make the Docker container image more reusable, you can add a `LABEL` to the `Dockerfile` to specify the author and version of the image. For example, you could add the following label to the `Dockerfile`:
+
+```dockerfile
+LABEL author="John Doe" version="1.0"
+```
+
+This will make it easier to identify the image in the Docker registry.
+
+You can also push the Docker container image to a Docker registry, such as Docker Hub, so that it can be shared with others. To push the image to Docker Hub, you can use the following command:
+
+```
+docker push doejohn/pytorch-rocm:latest
+```
+
+Once the image has been pushed to Docker Hub, you can start a Docker container from it using the following command:
+
+```
+docker run -it doejohn/pytorch-rocm:latest
+```
+
+This will start a Docker container with the PyTorch environment and the specified options.

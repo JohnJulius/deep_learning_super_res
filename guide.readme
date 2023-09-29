@@ -1,0 +1,47 @@
+# Make the directory if it doesn't exist yet.
+# This location is recommended by the distribution maintainers.
+sudo mkdir --parents --mode=0755 /etc/apt/keyrings
+# Download the key, convert the signing-key to a full
+# keyring required by apt and store in the keyring directory
+wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | \
+    gpg --dearmor | sudo tee /etc/apt/keyrings/rocm.gpg > /dev/null
+
+
+Ubuntu 22.04
+# Kernel driver repository for jammy
+sudo tee /etc/apt/sources.list.d/amdgpu.list <<'EOF'
+deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/latest/ubuntu jammy main
+EOF
+# ROCm repository for jammy
+sudo tee /etc/apt/sources.list.d/rocm.list <<'EOF'
+deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/debian jammy main
+EOF
+# Prefer packages from the rocm repository over system packages
+echo -e 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' | sudo tee /etc/apt/preferences.d/rocm-pin-600
+
+
+sudo apt update
+
+sudo apt install amdgpu-dkms
+
+sudo apt install rocm-hip-libraries
+
+
+sudo reboot
+
+sudo usermod -aG render julius
+sudo adduser julius video
+sudo rocminfo
+
+
+docker run -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --device=/dev/kfd --device=/dev/dri --group-add video --ipc=host --shm-size 8G rocm/pytorch:latest
+
+
+    -it: Interactive mode.
+    --cap-add=SYS_PTRACE: Add the SYS_PTRACE capability to the container. This is required for the container to access the hardware and software necessary for ROCm.
+    --security-opt seccomp=unconfined: Disable Seccomp filtering. This is required for the container to access the hardware and software necessary for ROCm.
+    --device=/dev/kfd: Mount the ROCm KFD device into the container.
+    --device=/dev/dri: Mount the ROCm DRI device into the container.
+    --group-add video: Add the video group to the container. This is required for the container to access the video device.
+    --ipc=host: Share the host machine's IPC namespace with the container.
+    --shm-size 8G: Set the container's shared memory size to 8 GB.
