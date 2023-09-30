@@ -45,3 +45,29 @@ docker run -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --device=/
     --group-add video: Add the video group to the container. This is required for the container to access the video device.
     --ipc=host: Share the host machine's IPC namespace with the container.
     --shm-size 8G: Set the container's shared memory size to 8 GB.
+
+
+Using the -w or --workdir flag: This flag allows you to specify the working directory of the container when you start it. For example, to start a container with the working directory set to /path/to/local/workspace, you would use the following command:
+
+    docker run -it --workdir=/path/to/local/workspace rocm/pytorch:latest
+
+Using a bind mount: A bind mount allows you to mount a directory from your local machine into the container. This means that any changes you make to the directory on your local machine will be reflected in the container, and vice versa. To mount a directory from your local machine into the container, you use the -v or --volume flag. For example, to mount the directory /path/to/local/workspace into the container at the path /workspace, you would use the following command:
+
+docker run -it -v /path/to/local/workspace:/workspace rocm/pytorch:latest
+
+docker run -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined --device=/dev/kfd --device=/dev/dri --group-add video --ipc=host --shm-size 8G rocm/pytorch:latest -v /julius/to/local/workspace:/workspace
+
+add environment variable
+-----------------------------(dockerfile) - my-pytorch-image
+FROM rocm/pytorch:latest
+
+ARG AMDGPU_TARGETS
+ARG HSA_OVERRIDE_GFX_VERSION
+
+RUN export AMDGPU_TARGETS=$AMDGPU_TARGETS
+RUN export HSA_OVERRIDE_GFX_VERSION=$HSA_OVERRIDE_GFX_VERSION
+
+----------------------------------
+
+my-pytorch-image
+docker build -t my-pytorch-image --build-arg AMDGPU_TARGETS=gfx1010 --build-arg HSA_OVERRIDE_GFX_VERSION=10.3.0 
